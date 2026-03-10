@@ -12,6 +12,8 @@ const YahooFinance = require("yahoo-finance2").default;
 const { RSI } = require("technicalindicators");
 
 const yf = new YahooFinance();
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 60 });
 
 module.exports = {
   // Get live stock price
@@ -148,47 +150,62 @@ module.exports = {
 
   // Scan market for oversold stocks
   async scan_market(req, res) {
-    try {
-      const symbols = [
-        "RELIANCE.NS",
-        "TCS.NS",
-        "INFY.NS",
-        "HDFCBANK.NS",
-        "ICICIBANK.NS",
-        "SBIN.NS",
-      ];
 
-      const results = [];
+  try {
 
-      for (const symbol of symbols) {
-        const hist = await yf.historical(symbol, {
-          period1: new Date("2023-01-01"),
-          period2: new Date(),
-          interval: "1d",
+    const cached = cache.get("scan_market");
+    if (cached) return res.json(cached);
+
+    const symbols = [
+      "RELIANCE.NS",
+      "TCS.NS",
+      "INFY.NS",
+      "HDFCBANK.NS",
+      "ICICIBANK.NS",
+      "SBIN.NS"
+    ];
+
+    const results = [];
+
+    for (const symbol of symbols) {
+
+      const hist = await yf.historical(symbol, {
+        period1: new Date("2023-01-01"),
+        period2: new Date(),
+        interval: "1d"
+      });
+
+      if (!hist || hist.length === 0) continue;
+
+      const closes = hist.map(d => d.close);
+
+      const rsi = RSI.calculate({
+        values: closes,
+        period: 14
+      });
+
+      const lastRSI = rsi[rsi.length - 1];
+
+      if (lastRSI < 30) {
+
+        results.push({
+          symbol,
+          rsi: lastRSI
         });
 
-        const closes = hist.map((d) => d.close);
-
-        const rsi = RSI.calculate({
-          values: closes,
-          period: 14,
-        });
-
-        const lastRSI = rsi[rsi.length - 1];
-
-        if (lastRSI < 30) {
-          results.push({
-            symbol,
-            rsi: lastRSI,
-          });
-        }
       }
 
-      res.json(results);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
     }
-  },
+
+    cache.set("scan_market", results);
+
+    res.json(results);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+
+},
 
   // Sector heatmap
   async get_sector_heatmap(req, res) {
