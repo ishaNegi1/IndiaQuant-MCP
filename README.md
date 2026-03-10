@@ -246,7 +246,7 @@ The server exposes 10 AI tools.
 
 <h3><b>Clone the repository</b></h3>
 
-<code>git clone https://github.com/yourusername/indiaquant-mcp.git</code><br>
+<code>git clone https://github.com/yourusername/IndiaQuant-MCP.git</code><br>
 <code>cd indiaquant-mcp</code>
 
 <h3><b>Install dependencies</b></h3>
@@ -259,7 +259,6 @@ Create a .env file:<br>
 
 <code>NEWS_API_KEY=your_news_api_key</code><br>
 <code>ALPHA_VANTAGE_KEY=your_alpha_vantage_key</code><br>
-<code>PORT=3000</code>
 
 <h3><b>Run the server</b></h3>
 
@@ -382,3 +381,4 @@ AI response:<br>
 <li>SQLite</li>
 <li>Node Cache</li>
 </ul>
+
